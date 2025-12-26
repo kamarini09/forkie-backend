@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: forkie_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: forkie_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - forkie_pgdata:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: forkie_api
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+
+      # Inside Docker, use service name `db`
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/forkie_db
+
+      JWT_SECRET: mysupersecretkey
+    ports:
+      - '3000:3000'
+    depends_on:
+      - db
+    volumes:
+      # Mount code for live reload
+      - .:/app
+      # Prevent host node_modules from overwriting container ones
+      - /app/node_modules
+
+volumes:
+  forkie_pgdata:
