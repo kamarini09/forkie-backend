@@ -11,17 +11,17 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
-  email: string;
-
-  @Column({ unique: true })
-  username: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  passwordHash: string | null;
-
   @Column({ type: 'varchar', unique: true, nullable: true })
   clerkUserId: string | null;
+
+  @Column({ type: 'varchar', unique: true, nullable: true })
+  email: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  firstName: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  lastName: string | null;
 
   @CreateDateColumn()
   createdAt: Date;
