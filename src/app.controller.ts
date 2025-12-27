@@ -1,22 +1,30 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { getAuth } from '@clerk/express';
 import type { Request } from 'express';
+import { getAuth } from '@clerk/express';
 import { ClerkAuthGuard } from './auth/clerk-auth.guard';
-import { AppService } from './app.service';
+import { UsersService } from './users/users.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
+  constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
   @UseGuards(ClerkAuthGuard)
-  me(@Req() req: Request) {
+  async me(@Req() req: Request) {
     const auth = getAuth(req);
-    return { clerkUserId: auth.userId };
+
+    const dbUser = await this.usersService.findOrCreateByClerkId({
+      clerkUserId: auth.userId!,
+      // we’ll fill these properly in the next step
+    });
+
+    return {
+      clerkUserId: auth.userId,
+      user: {
+        id: dbUser.id,
+        email: dbUser.email,
+        username: dbUser.username,
+      },
+    };
   }
 }
