@@ -12,18 +12,16 @@ export class AppController {
   @UseGuards(ClerkAuthGuard)
   async me(@Req() req: Request) {
     const auth = getAuth(req);
-
-    const dbUser = await this.usersService.findOrCreateByClerkId({
-      clerkUserId: auth.userId!,
-      // we’ll fill these properly in the next step
-    });
+    const dbUser = await this.usersService.findOrCreateByClerkId(auth.userId!);
 
     return {
       clerkUserId: auth.userId,
+      hello: `Hello, ${dbUser.firstName ?? 'chef'}!`,
       user: {
         id: dbUser.id,
         email: dbUser.email,
-        username: dbUser.username,
+        firstName: dbUser.firstName,
+        lastName: dbUser.lastName,
       },
     };
   }

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { clerkClient } from '@clerk/express';
 
 @Injectable()
 export class UsersService {
@@ -10,23 +11,57 @@ export class UsersService {
     private readonly usersRepo: Repository<User>,
   ) {}
 
-  async findOrCreateByClerkId(params: {
-    clerkUserId: string;
-    email?: string | null;
-    username?: string | null;
-  }) {
-    const { clerkUserId, email = null, username = null } = params;
+  private isPlaceholderEmail(email: string | null): boolean {
+    return (
+      !!email && email.startsWith('unknown+') && email.endsWith('@example.com')
+    );
+  }
 
+  async findOrCreateByClerkId(clerkUserId: string): Promise<User> {
     let user = await this.usersRepo.findOne({ where: { clerkUserId } });
-    if (user) return user;
 
-    user = this.usersRepo.create({
-      clerkUserId,
-      email: email ?? `unknown+${clerkUserId}@example.com`,
-      username: username ?? clerkUserId, // temporary fallback
-      passwordHash: null,
-    });
+    const clerkUser = await clerkClient.users.getUser(clerkUserId);
 
-    return this.usersRepo.save(user);
+    const primaryEmail =
+      clerkUser.emailAddresses.find(
+        (e) => e.id === clerkUser.primaryEmailAddressId,
+      )?.emailAddress ??
+      clerkUser.emailAddresses[0]?.emailAddress ??
+      null;
+
+    const firstName = clerkUser.firstName ?? null;
+    const lastName = clerkUser.lastName ?? null;
+
+    if (!user) {
+      user = this.usersRepo.create({
+        clerkUserId,
+        email: primaryEmail,
+        firstName,
+        lastName,
+      });
+      return this.usersRepo.save(user);
+    }
+
+    // Update missing fields OR replace placeholder email with real email
+    const needsUpdate =
+      ((user.email == null || this.isPlaceholderEmail(user.email)) &&
+        primaryEmail != null) ||
+      (user.firstName == null && firstName != null) ||
+      (user.lastName == null && lastName != null);
+
+    if (needsUpdate) {
+      if (
+        primaryEmail &&
+        (user.email == null || this.isPlaceholderEmail(user.email))
+      ) {
+        user.email = primaryEmail;
+      }
+      user.firstName = user.firstName ?? firstName;
+      user.lastName = user.lastName ?? lastName;
+
+      user = await this.usersRepo.save(user);
+    }
+
+    return user;
   }
 }
