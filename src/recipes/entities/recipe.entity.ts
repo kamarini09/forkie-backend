@@ -36,8 +36,8 @@ export class Recipe {
 
   @Column({ type: 'boolean', default: true })
   isPublic: boolean;
-  @Column({ type: 'jsonb', nullable: true })
-  content?: RecipeContent;
+  @Column({ type: 'jsonb' })
+  content: RecipeContent;
 
   @Index()
   @Column({ type: 'uuid', name: 'user_id', nullable: true })
