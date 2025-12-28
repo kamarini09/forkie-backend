@@ -13,7 +13,7 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', unique: true, nullable: true })
+  @Column({ type: 'varchar', unique: true })
   clerkUserId: string | null;
 
   @Column({ type: 'varchar', unique: true, nullable: true })

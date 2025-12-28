@@ -20,6 +20,7 @@ export class UsersService {
   async findOrCreateByClerkId(clerkUserId: string): Promise<User> {
     let user = await this.usersRepo.findOne({ where: { clerkUserId } });
 
+    // Always fetch from Clerk so we can fill missing fields
     const clerkUser = await clerkClient.users.getUser(clerkUserId);
 
     const primaryEmail =
@@ -33,13 +34,22 @@ export class UsersService {
     const lastName = clerkUser.lastName ?? null;
 
     if (!user) {
-      user = this.usersRepo.create({
-        clerkUserId,
-        email: primaryEmail,
-        firstName,
-        lastName,
-      });
-      return this.usersRepo.save(user);
+      try {
+        user = this.usersRepo.create({
+          clerkUserId,
+          email: primaryEmail,
+          firstName,
+          lastName,
+        });
+        return await this.usersRepo.save(user);
+      } catch (err: any) {
+        // If another request created the user first (unique constraint), refetch.
+        const existing = await this.usersRepo.findOne({
+          where: { clerkUserId },
+        });
+        if (existing) return existing;
+        throw err;
+      }
     }
 
     // Update missing fields OR replace placeholder email with real email
