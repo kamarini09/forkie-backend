@@ -6,6 +6,19 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+export type RecipeContent = {
+  ingredients: Array<{
+    name: string;
+    quantity?: number;
+    unit?: string;
+    note?: string;
+  }>;
+  steps: Array<{
+    order: number;
+    text: string;
+  }>;
+};
+
 @Entity('recipes')
 export class Recipe {
   @PrimaryGeneratedColumn('uuid')
@@ -19,6 +32,8 @@ export class Recipe {
 
   @Column({ type: 'boolean', default: true })
   isPublic: boolean;
+  @Column({ type: 'jsonb', nullable: true })
+  content?: RecipeContent;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
