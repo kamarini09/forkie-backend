@@ -1,9 +1,11 @@
+import { Recipe } from 'src/recipes/entities/recipe.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity('users')
@@ -22,6 +24,9 @@ export class User {
 
   @Column({ type: 'varchar', nullable: true })
   lastName: string | null;
+
+  @OneToMany(() => Recipe, (recipe) => recipe.user)
+  recipes?: Recipe[];
 
   @CreateDateColumn()
   createdAt: Date;

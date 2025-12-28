@@ -1,7 +1,11 @@
+import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -34,6 +38,14 @@ export class Recipe {
   isPublic: boolean;
   @Column({ type: 'jsonb', nullable: true })
   content?: RecipeContent;
+
+  @Index()
+  @Column({ type: 'uuid', name: 'user_id', nullable: true })
+  userId?: string;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'user_id' })
+  user?: User;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
