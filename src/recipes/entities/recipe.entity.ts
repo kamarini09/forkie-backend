@@ -47,6 +47,14 @@ export class Recipe {
   @JoinColumn({ name: 'user_id' })
   user?: User;
 
+  @Index()
+  @Column({ type: 'uuid', name: 'parent_recipe_id', nullable: true })
+  parentRecipeId?: string;
+
+  @ManyToOne(() => Recipe, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'parent_recipe_id' })
+  parentRecipe?: Recipe;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
