@@ -2,7 +2,6 @@ import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsInt,
-  IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
@@ -11,11 +10,11 @@ import {
 } from 'class-validator';
 import { RecipeContentDto } from './recipe-content.dto';
 
-export class CreateRecipeDto {
+export class UpdateRecipeDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(255)
-  title: string;
+  title?: string;
 
   @IsOptional()
   @IsString()
@@ -25,9 +24,10 @@ export class CreateRecipeDto {
   @IsBoolean()
   isPublic?: boolean;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => RecipeContentDto)
-  content: RecipeContentDto;
+  content?: RecipeContentDto;
 
   @IsOptional()
   @IsInt()

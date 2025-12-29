@@ -39,6 +39,15 @@ export class Recipe {
   @Column({ type: 'jsonb' })
   content: RecipeContent;
 
+  @Column({ type: 'int', nullable: true })
+  servings?: number;
+
+  @Column({ type: 'int', name: 'prep_minutes', nullable: true })
+  prepMinutes?: number;
+
+  @Column({ type: 'int', name: 'cook_minutes', nullable: true })
+  cookMinutes?: number;
+
   @Index()
   @Column({ type: 'uuid', name: 'user_id', nullable: true })
   userId?: string;
