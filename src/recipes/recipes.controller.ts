@@ -54,4 +54,9 @@ export class RecipesController {
     const { userId: clerkUserId } = getAuth(req);
     return this.recipesService.getOneForView(id, clerkUserId ?? null);
   }
+
+  @Get()
+  listPublic() {
+    return this.recipesService.listPublic();
+  }
 }

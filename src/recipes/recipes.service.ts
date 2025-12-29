@@ -152,4 +152,27 @@ export class RecipesService {
         : null,
     };
   }
+  async listPublic() {
+    const recipes = await this.recipesRepo.find({
+      where: { isPublic: true },
+      order: { createdAt: 'DESC' },
+      relations: { parentRecipe: true }, // so we can show "forked from" if you want
+    });
+
+    // Return a light “summary” for the grid (no need to send full content)
+    return recipes.map((r) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      isPublic: r.isPublic,
+      servings: r.servings,
+      prepMinutes: r.prepMinutes,
+      cookMinutes: r.cookMinutes,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      forkedFrom: r.parentRecipe
+        ? { id: r.parentRecipe.id, title: r.parentRecipe.title }
+        : null,
+    }));
+  }
 }
