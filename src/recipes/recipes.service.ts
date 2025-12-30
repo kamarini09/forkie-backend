@@ -121,20 +121,19 @@ export class RecipesService {
   async getOneForView(recipeId: string, clerkUserId: string | null) {
     const dbUserId = await this.getDbUserIdOrNull(clerkUserId);
 
-    // Load parent recipe too, so UI can show "Forked from ..."
-    // We only need parent id + title, but simplest is to load relation and return a shaped response.
+    // ✅ Load parentRecipe + user so we can return ownerClerkId
     const recipe = await this.recipesRepo.findOne({
       where: { id: recipeId },
-      relations: { parentRecipe: true },
+      relations: { parentRecipe: true, user: true },
     });
 
     if (!recipe) throw new NotFoundException('Recipe not found');
 
     const canView =
       recipe.isPublic === true || (dbUserId && recipe.userId === dbUserId);
+
     if (!canView) throw new ForbiddenException('Recipe is private');
 
-    // Return a UI-friendly shape (so you don’t leak full parent content)
     return {
       id: recipe.id,
       title: recipe.title,
@@ -147,19 +146,23 @@ export class RecipesService {
       createdAt: recipe.createdAt,
       updatedAt: recipe.updatedAt,
 
+      // ✅ ADD THESE (frontend needs them)
+      userId: recipe.userId, // DB uuid
+      ownerClerkId: recipe.user?.clerkUserId ?? null, // Clerk "user_..."
+
       forkedFrom: recipe.parentRecipe
         ? { id: recipe.parentRecipe.id, title: recipe.parentRecipe.title }
         : null,
     };
   }
+
   async listPublic() {
     const recipes = await this.recipesRepo.find({
       where: { isPublic: true },
       order: { createdAt: 'DESC' },
-      relations: { parentRecipe: true }, // so we can show "forked from" if you want
+      relations: { parentRecipe: true, user: true }, // ✅ add user
     });
 
-    // Return a light “summary” for the grid (no need to send full content)
     return recipes.map((r) => ({
       id: r.id,
       title: r.title,
@@ -170,6 +173,11 @@ export class RecipesService {
       cookMinutes: r.cookMinutes,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
+
+      // optional
+      userId: r.userId,
+      ownerClerkId: r.user?.clerkUserId ?? null,
+
       forkedFrom: r.parentRecipe
         ? { id: r.parentRecipe.id, title: r.parentRecipe.title }
         : null,

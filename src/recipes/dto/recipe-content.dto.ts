@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -11,6 +12,20 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+
+const UNIT_OPTIONS = [
+  'gr',
+  'kg',
+  'ml',
+  'l',
+  'tsp',
+  'tbsp',
+  'cup',
+  'pcs',
+  'pinch',
+  'clove',
+  'slice',
+] as const;
 
 export class IngredientDto {
   @IsString()
@@ -23,9 +38,10 @@ export class IngredientDto {
   quantity?: number;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  unit?: string;
+  @IsIn(UNIT_OPTIONS, {
+    message: `unit must be one of: ${UNIT_OPTIONS.join(', ')}`,
+  })
+  unit?: (typeof UNIT_OPTIONS)[number];
 
   @IsOptional()
   @IsString()
