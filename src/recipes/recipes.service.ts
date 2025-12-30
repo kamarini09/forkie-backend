@@ -96,19 +96,22 @@ export class RecipesService {
     });
     if (!original) throw new NotFoundException('Recipe not found');
 
-    // Rule: can fork public recipes OR your own private recipe
-    const canView = original.isPublic === true || original.userId === user.id;
+    // ✅ Block forking your own recipe
+    if (original.userId === user.id) {
+      throw new ForbiddenException('Cannot fork your own recipe');
+    }
 
-    if (!canView) throw new ForbiddenException('Cannot fork a private recipe');
+    // ✅ Only public recipes can be forked by others
+    if (!original.isPublic) {
+      throw new ForbiddenException('Cannot fork a private recipe');
+    }
 
     const forked = this.recipesRepo.create({
       userId: user.id,
       parentRecipeId: original.id,
-
-      // copy fields
       title: original.title,
       description: original.description ?? null,
-      isPublic: false, // common default: forks start private
+      isPublic: false,
       content: original.content,
       servings: original.servings ?? null,
       prepMinutes: original.prepMinutes ?? null,
