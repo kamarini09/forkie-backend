@@ -166,32 +166,36 @@ export class RecipesService {
     };
   }
 
-  async listPublic() {
+  async listPublic(clerkUserId: string | null = null) {
     const recipes = await this.recipesRepo.find({
       where: { isPublic: true },
       order: { createdAt: 'DESC' },
       relations: { parentRecipe: true, user: true }, // ✅ add user
     });
 
-    return recipes.map((r) => ({
-      id: r.id,
-      title: r.title,
-      description: r.description,
-      isPublic: r.isPublic,
-      servings: r.servings,
-      prepMinutes: r.prepMinutes,
-      cookMinutes: r.cookMinutes,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
+    return Promise.all(
+      recipes.map(async (r) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        isPublic: r.isPublic,
+        servings: r.servings,
+        prepMinutes: r.prepMinutes,
+        cookMinutes: r.cookMinutes,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
 
-      // optional
-      userId: r.userId,
-      ownerClerkId: r.user?.clerkUserId ?? null,
+        // optional
+        userId: r.userId,
+        ownerClerkId: r.user?.clerkUserId ?? null,
 
-      forkedFrom: r.parentRecipe
-        ? { id: r.parentRecipe.id, title: r.parentRecipe.title }
-        : null,
-    }));
+        forkedFrom: r.parentRecipe
+          ? { id: r.parentRecipe.id, title: r.parentRecipe.title }
+          : null,
+
+        isFavorited: await this.favoritesService.isFavorited(clerkUserId, r.id),
+      })),
+    );
   }
 
   async listByUser(clerkUserId: string) {
@@ -203,23 +207,27 @@ export class RecipesService {
       relations: { parentRecipe: true, user: true },
     });
 
-    return recipes.map((r) => ({
-      id: r.id,
-      title: r.title,
-      description: r.description,
-      isPublic: r.isPublic,
-      servings: r.servings,
-      prepMinutes: r.prepMinutes,
-      cookMinutes: r.cookMinutes,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
+    return Promise.all(
+      recipes.map(async (r) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        isPublic: r.isPublic,
+        servings: r.servings,
+        prepMinutes: r.prepMinutes,
+        cookMinutes: r.cookMinutes,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
 
-      userId: r.userId,
-      ownerClerkId: r.user?.clerkUserId ?? null,
+        userId: r.userId,
+        ownerClerkId: r.user?.clerkUserId ?? null,
 
-      forkedFrom: r.parentRecipe
-        ? { id: r.parentRecipe.id, title: r.parentRecipe.title }
-        : null,
-    }));
+        forkedFrom: r.parentRecipe
+          ? { id: r.parentRecipe.id, title: r.parentRecipe.title }
+          : null,
+
+        isFavorited: await this.favoritesService.isFavorited(clerkUserId, r.id),
+      })),
+    );
   }
 }
