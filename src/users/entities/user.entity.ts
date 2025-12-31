@@ -1,3 +1,4 @@
+import { Favorite } from 'src/favorites/entities/favorite.entity';
 import { Recipe } from 'src/recipes/entities/recipe.entity';
 import {
   Entity,
@@ -27,6 +28,9 @@ export class User {
 
   @OneToMany(() => Recipe, (recipe) => recipe.user)
   recipes?: Recipe[];
+
+  @OneToMany(() => Favorite, (favorite) => favorite.user)
+  favorites?: Favorite[];
 
   @CreateDateColumn()
   createdAt: Date;

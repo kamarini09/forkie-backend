@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { RecipesModule } from './recipes/recipes.module';
+import { FavoritesModule } from './favorites/favorites.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { RecipesModule } from './recipes/recipes.module';
     }),
     UsersModule,
     RecipesModule,
+    FavoritesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

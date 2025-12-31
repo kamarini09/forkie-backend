@@ -1,3 +1,4 @@
+import { Favorite } from 'src/favorites/entities/favorite.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
@@ -6,6 +7,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -63,6 +65,9 @@ export class Recipe {
   @ManyToOne(() => Recipe, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'parent_recipe_id' })
   parentRecipe?: Recipe;
+
+  @OneToMany(() => Favorite, (favorite) => favorite.recipe)
+  favorites?: Favorite[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
