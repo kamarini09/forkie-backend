@@ -10,6 +10,6 @@ import { Recipe } from 'src/recipes/entities/recipe.entity';
   imports: [TypeOrmModule.forFeature([Favorite, User, Recipe])],
   providers: [FavoritesService],
   controllers: [FavoritesController],
-  exports: [TypeOrmModule],
+  exports: [FavoritesService],
 })
 export class FavoritesModule {}

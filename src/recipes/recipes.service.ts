@@ -10,6 +10,7 @@ import { Recipe } from './entities/recipe.entity';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { UsersService } from '../users/users.service';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
+import { FavoritesService } from 'src/favorites/favorites.service';
 
 @Injectable()
 export class RecipesService {
@@ -17,6 +18,7 @@ export class RecipesService {
     @InjectRepository(Recipe)
     private readonly recipesRepo: Repository<Recipe>,
     private readonly usersService: UsersService,
+    private readonly favoritesService: FavoritesService,
   ) {}
 
   private async getDbUserIdOrNull(clerkUserId: string | null) {
@@ -124,7 +126,6 @@ export class RecipesService {
   async getOneForView(recipeId: string, clerkUserId: string | null) {
     const dbUserId = await this.getDbUserIdOrNull(clerkUserId);
 
-    // ✅ Load parentRecipe + user so we can return ownerClerkId
     const recipe = await this.recipesRepo.findOne({
       where: { id: recipeId },
       relations: { parentRecipe: true, user: true },
@@ -136,6 +137,11 @@ export class RecipesService {
       recipe.isPublic === true || (dbUserId && recipe.userId === dbUserId);
 
     if (!canView) throw new ForbiddenException('Recipe is private');
+
+    const isFavorited = await this.favoritesService.isFavorited(
+      clerkUserId,
+      recipe.id,
+    );
 
     return {
       id: recipe.id,
@@ -149,13 +155,14 @@ export class RecipesService {
       createdAt: recipe.createdAt,
       updatedAt: recipe.updatedAt,
 
-      // ✅ ADD THESE (frontend needs them)
-      userId: recipe.userId, // DB uuid
-      ownerClerkId: recipe.user?.clerkUserId ?? null, // Clerk "user_..."
+      userId: recipe.userId,
+      ownerClerkId: recipe.user?.clerkUserId ?? null,
 
       forkedFrom: recipe.parentRecipe
         ? { id: recipe.parentRecipe.id, title: recipe.parentRecipe.title }
         : null,
+
+      isFavorited, // ✅ NEW
     };
   }
 

@@ -13,11 +13,22 @@ export class FavoritesService {
     @InjectRepository(Recipe) private readonly recipeRepo: Repository<Recipe>,
   ) {}
 
-  // assumes you store clerk user id in users.clerkUserId
   private async getUserByClerkId(clerkUserId: string) {
     const user = await this.userRepo.findOne({ where: { clerkUserId } });
     if (!user) throw new NotFoundException('User not found');
     return user;
+  }
+
+  async isFavorited(
+    clerkUserId: string | null,
+    recipeId: string,
+  ): Promise<boolean> {
+    if (!clerkUserId) return false;
+
+    const user = await this.userRepo.findOne({ where: { clerkUserId } });
+    if (!user) return false;
+
+    return this.favRepo.exist({ where: { userId: user.id, recipeId } });
   }
 
   async add(clerkUserId: string, recipeId: string) {
@@ -31,13 +42,14 @@ export class FavoritesService {
       'recipeId',
     ]);
 
-    return { ok: true };
+    return { ok: true, isFavorited: true };
   }
 
   async remove(clerkUserId: string, recipeId: string) {
     const user = await this.getUserByClerkId(clerkUserId);
     await this.favRepo.delete({ userId: user.id, recipeId });
-    return { ok: true };
+
+    return { ok: true, isFavorited: false };
   }
 
   async list(clerkUserId: string) {
