@@ -59,4 +59,11 @@ export class RecipesController {
   listPublic() {
     return this.recipesService.listPublic();
   }
+
+  @UseGuards(ClerkAuthGuard)
+  @Get('me/recipes')
+  getMyRecipes(@Req() req: Request) {
+    const { userId: clerkUserId } = getAuth(req);
+    return this.recipesService.listByUser(clerkUserId!);
+  }
 }

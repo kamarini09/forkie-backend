@@ -193,4 +193,33 @@ export class RecipesService {
         : null,
     }));
   }
+
+  async listByUser(clerkUserId: string) {
+    const user = await this.usersService.findOrCreateByClerkId(clerkUserId);
+
+    const recipes = await this.recipesRepo.find({
+      where: { userId: user.id },
+      order: { createdAt: 'DESC' },
+      relations: { parentRecipe: true, user: true },
+    });
+
+    return recipes.map((r) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      isPublic: r.isPublic,
+      servings: r.servings,
+      prepMinutes: r.prepMinutes,
+      cookMinutes: r.cookMinutes,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+
+      userId: r.userId,
+      ownerClerkId: r.user?.clerkUserId ?? null,
+
+      forkedFrom: r.parentRecipe
+        ? { id: r.parentRecipe.id, title: r.parentRecipe.title }
+        : null,
+    }));
+  }
 }
