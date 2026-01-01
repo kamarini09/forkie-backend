@@ -10,6 +10,7 @@ import { Recipe } from './entities/recipe.entity';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { UsersService } from '../users/users.service';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
+import { FavoritesService } from '../favorites/favorites.service';
 
 @Injectable()
 export class RecipesService {
@@ -17,6 +18,7 @@ export class RecipesService {
     @InjectRepository(Recipe)
     private readonly recipesRepo: Repository<Recipe>,
     private readonly usersService: UsersService,
+    private readonly favoritesService: FavoritesService,
   ) {}
 
   private async getDbUserIdOrNull(clerkUserId: string | null) {
@@ -137,6 +139,11 @@ export class RecipesService {
 
     if (!canView) throw new ForbiddenException('Recipe is private');
 
+    // Check if the recipe is favorited by the current user
+    const isFavorited = clerkUserId
+      ? await this.favoritesService.isFavorited(recipeId, clerkUserId)
+      : false;
+
     return {
       id: recipe.id,
       title: recipe.title,
@@ -152,6 +159,7 @@ export class RecipesService {
       // ✅ ADD THESE (frontend needs them)
       userId: recipe.userId, // DB uuid
       ownerClerkId: recipe.user?.clerkUserId ?? null, // Clerk "user_..."
+      isFavorited, // ✅ NEW: Whether current user favorited this
 
       forkedFrom: recipe.parentRecipe
         ? { id: recipe.parentRecipe.id, title: recipe.parentRecipe.title }
@@ -178,6 +186,35 @@ export class RecipesService {
       updatedAt: r.updatedAt,
 
       // optional
+      userId: r.userId,
+      ownerClerkId: r.user?.clerkUserId ?? null,
+
+      forkedFrom: r.parentRecipe
+        ? { id: r.parentRecipe.id, title: r.parentRecipe.title }
+        : null,
+    }));
+  }
+
+  async getUserRecipes(clerkUserId: string) {
+    const user = await this.usersService.findOrCreateByClerkId(clerkUserId);
+
+    const recipes = await this.recipesRepo.find({
+      where: { userId: user.id },
+      order: { createdAt: 'DESC' },
+      relations: { parentRecipe: true, user: true },
+    });
+
+    return recipes.map((r) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      isPublic: r.isPublic,
+      servings: r.servings,
+      prepMinutes: r.prepMinutes,
+      cookMinutes: r.cookMinutes,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+
       userId: r.userId,
       ownerClerkId: r.user?.clerkUserId ?? null,
 
