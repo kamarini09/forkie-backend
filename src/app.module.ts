@@ -18,7 +18,7 @@ import { FavoritesModule } from './favorites/favorites.module';
       url: process.env.DATABASE_URL,
       autoLoadEntities: true,
       synchronize: false,
-      logging: process.env.NODE_ENV === 'development',
+      logging: ['error'],
     }),
     UsersModule,
     RecipesModule,
