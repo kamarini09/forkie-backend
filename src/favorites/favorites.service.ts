@@ -30,7 +30,6 @@ export class FavoritesService {
       throw new NotFoundException('Recipe not found');
     }
 
-    // Check if already favorited
     const existing = await this.favoritesRepo.findOne({
       where: {
         userId: user.id,

@@ -98,12 +98,10 @@ export class RecipesService {
     });
     if (!original) throw new NotFoundException('Recipe not found');
 
-    // ✅ Block forking your own recipe
     if (original.userId === user.id) {
       throw new ForbiddenException('Cannot fork your own recipe');
     }
 
-    // ✅ Only public recipes can be forked by others
     if (!original.isPublic) {
       throw new ForbiddenException('Cannot fork a private recipe');
     }
@@ -126,7 +124,7 @@ export class RecipesService {
   async getOneForView(recipeId: string, clerkUserId: string | null) {
     const dbUserId = await this.getDbUserIdOrNull(clerkUserId);
 
-    // ✅ Load parentRecipe + user so we can return ownerClerkId
+    // Load parentRecipe + user so we can return ownerClerkId
     const recipe = await this.recipesRepo.findOne({
       where: { id: recipeId },
       relations: { parentRecipe: true, user: true },
@@ -156,10 +154,10 @@ export class RecipesService {
       createdAt: recipe.createdAt,
       updatedAt: recipe.updatedAt,
 
-      // ✅ ADD THESE (frontend needs them)
+      // Load these (frontend needs them)
       userId: recipe.userId, // DB uuid
       ownerClerkId: recipe.user?.clerkUserId ?? null, // Clerk "user_..."
-      isFavorited, // ✅ NEW: Whether current user favorited this
+      isFavorited, // Whether current user favorited this
 
       forkedFrom: recipe.parentRecipe
         ? { id: recipe.parentRecipe.id, title: recipe.parentRecipe.title }
